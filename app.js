@@ -3,7 +3,7 @@
 function startCamera() {
   const constraints = {
     video: {
-      facingMode: 'user'  // You can specify preferred video height
+      facingMode: 'environment'  // You can specify preferred video height
     }
   };
 
