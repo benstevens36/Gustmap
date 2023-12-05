@@ -1,17 +1,24 @@
 // app.js
 
 function startCamera() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        let video = document.getElementById("cameraFeed");
-        video.srcObject = stream;
-        processCameraFeed();
-      })
-      .catch((err) => {
-        console.error("Error accessing the camera: ", err);
-      });
-  }
+  const constraints = {
+    video: {
+      facingMode: 'user'  // You can specify preferred video height
+    }
+  };
+
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then((stream) => {
+      let video = document.getElementById("cameraFeed");
+      video.srcObject = stream;
+      processCameraFeed();
+    })
+    .catch((err) => {
+      console.error("Error accessing the camera: ", err);
+    });
+}
+
   
   function processCameraFeed() {
     let video = document.getElementById("cameraFeed");
