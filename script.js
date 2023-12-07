@@ -57,49 +57,44 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function processVideo() {
-    try {
-        // Update the canvas size to match the video size each frame
-        canvasOutput.width = video.videoWidth;
-        canvasOutput.height = video.videoHeight;
+    if (video.readyState === 4) { // Ensure the video is ready
+        try {
+            // Create matrices with the current video dimensions
+            let frame2 = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
+            let next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
 
-        // Create new matrices with the updated dimensions
-        let frame2 = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-        let next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
+            cap.read(frame2); // Read a frame from the video
+            cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY); // Convert to grayscale
 
-        // Read the current frame from the video
-        cap.read(frame2);
+            let flow = new cv.Mat();
+            cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 
-        // Convert to grayscale
-        cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
-
-        // Calculate optical flow
-        let flow = new cv.Mat();
-        cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
-
-        // Draw the optical flow arrows
-        for (let y = 0; y < video.videoHeight; y += 20) {
-            for (let x = 0; x < video.videoWidth; x += 20) {
-                let idx = (y * video.videoWidth + x) * 2;
-                let u = flow.data32F[idx];
-                let v = flow.data32F[idx + 1];
-                if (Math.abs(u) > 2 || Math.abs(v) > 2) {
-                    drawArrow(canvasContext, x, y, x + u, y + v);
+            // Draw arrows to represent the optical flow
+            for (let y = 0; y < video.videoHeight; y += 20) {
+                for (let x = 0; x < video.videoWidth; x += 20) {
+                    let idx = (y * video.videoWidth + x) * 2;
+                    let u = flow.data32F[idx];
+                    let v = flow.data32F[idx + 1];
+                    if (Math.abs(u) > 2 || Math.abs(v) > 2) {
+                        drawArrow(canvasContext, x, y, x + u, y + v);
+                    }
                 }
             }
+
+            prvs.delete();
+            prvs = next.clone(); // Update previous frame
+            frame2.delete();
+            flow.delete();
+        } catch (err) {
+            console.error("Error processing video frame: ", err);
         }
 
-        // Update previous frame and clean up
-        prvs.delete();
-        prvs = next.clone();
-        frame2.delete();
-        flow.delete();
-
-        // Request next frame processing
-        requestAnimationFrame(processVideo);
-    } catch (err) {
-        console.error("Error processing video frame: ", err);
+        requestAnimationFrame(processVideo); // Continue processing
+    } else {
+        requestAnimationFrame(processVideo); // Retry if the video is not ready
     }
 }
+
 
 
 function drawArrow(context, fromX, fromY, toX, toY) {
