@@ -17,14 +17,23 @@ function initializeVideoStream() {
         return;
     }
 
+    const constraints = {
+        video: {
+            width: { max: 640 }, // Example resolution constraint
+            height: { max: 480 }
+        }
+    };
+
     console.log("Attempting to start camera...");
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(function (stream) {
             console.log("Camera feed started.");
             video.srcObject = stream;
             video.onloadedmetadata = function (e) {
                 console.log("Camera metadata loaded, starting video...");
                 video.play();
+                canvasOutput.width = video.videoWidth;
+                canvasOutput.height = video.videoHeight;
                 initializeOpenCVObjects();
             };
         })
@@ -32,6 +41,7 @@ function initializeVideoStream() {
             console.error("An error occurred while accessing the camera: ", err);
         });
 }
+
 
 function initializeOpenCVObjects() {
     try {
