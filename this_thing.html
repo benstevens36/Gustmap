@@ -8,17 +8,13 @@
     <script src="script.js" type="text/javascript"></script>
   </head>
   <body>
-    <h2>Live Camera Feed: Grayscale Conversion</h2>
-
     <!-- Placeholder for loading message -->
     <div id="loadingMessage">Camera feed loading...</div>
 
-    <!-- Live Camera Feed -->
-    <p>Camera Feed:</p>
-    <video id="cameraFeed" autoplay muted playsinline width="640" height="480"></video>
+    <!-- Hidden Video Element for Capturing Video Feed -->
+    <video id="cameraFeed" autoplay muted playsinline style="display: none;" width="640" height="480"></video>
 
     <!-- Canvas for displaying the processed feed -->
-    <p>Grayscale Feed:</p>
     <canvas id="canvasOutput" width="640" height="480"></canvas>
   </body>
 </html>
