@@ -79,6 +79,12 @@ function processVideo() {
             }
         }
 
+        // Hide the loading message
+        let loadingMessage = document.getElementById("loadingMessage");
+        if (loadingMessage) {
+            loadingMessage.style.display = "none";
+        }
+
         prvs.delete();
         prvs = next.clone(); // Clone the next frame to use as the previous frame in the next iteration
         frame2.delete();
@@ -88,6 +94,7 @@ function processVideo() {
         console.error("Error processing video frame: ", err);
     }
 }
+
 
 function drawArrow(context, fromX, fromY, toX, toY) {
     var dx = toX - fromX;
