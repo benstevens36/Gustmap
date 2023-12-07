@@ -1,5 +1,3 @@
-// app.js
-
 function startCamera() {
   navigator.mediaDevices
     .getUserMedia({ video: true })
@@ -19,9 +17,8 @@ function processCameraFeed() {
   let context = canvas.getContext("2d");
 
   let lastFrameData = null;
-  let frameDifferences = []; // Store the last 5 frames of differences
-  let historyLength = 4; // Number of frames to consider for averaging
-  let motionRadius = 2; // Radius for enlarging motion regions
+  const gridRows = 10;
+  const gridCols = 10;
 
   video.addEventListener('play', function() {
     function step() {
@@ -31,76 +28,64 @@ function processCameraFeed() {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       let currentFrameData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-      // Dimming the background
-      for (let i = 0; i < currentFrameData.data.length; i += 4) {
-        currentFrameData.data[i] *= 0.7;     // R
-        currentFrameData.data[i + 1] *= 0.7; // G
-        currentFrameData.data[i + 2] *= 0.7; // B
-      }
-
       if (lastFrameData) {
-        let frameDifference = context.createImageData(canvas.width, canvas.height);
+        const cellWidth = canvas.width / gridCols;
+        const cellHeight = canvas.height / gridRows;
 
-        // Calculate the difference in pixel values for the current frame
-        for (let i = 0; i < currentFrameData.data.length; i += 4) {
-          let diff = Math.abs(currentFrameData.data[i] - lastFrameData.data[i]) +
-                     Math.abs(currentFrameData.data[i+1] - lastFrameData.data[i+1]) +
-                     Math.abs(currentFrameData.data[i+2] - lastFrameData.data[i+2]);
-          frameDifference.data[i] = diff;
-          frameDifference.data[i+1] = diff;
-          frameDifference.data[i+2] = diff;
-          frameDifference.data[i+3] = 255;
-        }
+        for (let row = 0; row < gridRows; row++) {
+          for (let col = 0; col < gridCols; col++) {
+            let xMovement = 0;
+            let yMovement = 0;
+            let count = 0;
 
-        frameDifferences.push(frameDifference);
-        if (frameDifferences.length > historyLength) {
-          frameDifferences.shift();
-        }
+            for (let y = Math.floor(row * cellHeight); y < (row + 1) * cellHeight; y++) {
+              for (let x = Math.floor(col * cellWidth); x < (col + 1) * cellWidth; x++) {
+                let index = (y * canvas.width + x) * 4;
+                let diff = Math.abs(currentFrameData.data[index] - lastFrameData.data[index]);
 
-        let motionFrameData = context.createImageData(canvas.width, canvas.height);
-
-        // Calculate average difference over the history
-        for (let y = 0; y < canvas.height; y++) {
-          for (let x = 0; x < canvas.width; x++) {
-            let sumDiff = 0;
-            for (let j = 0; j < frameDifferences.length; j++) {
-              let index = (y * canvas.width + x) * 4;
-              sumDiff += frameDifferences[j].data[index];
-            }
-            let avgDiff = sumDiff / frameDifferences.length;
-
-            // Simple thresholding to identify motion
-            if (avgDiff > 30) { // Adjust this threshold as needed
-              // Color the pixels around the current pixel
-              for (let dy = -motionRadius; dy <= motionRadius; dy++) {
-                for (let dx = -motionRadius; dx <= motionRadius; dx++) {
-                  if (x + dx >= 0 && x + dx < canvas.width && y + dy >= 0 && y + dy < canvas.height) {
-                    let motionIndex = ((y + dy) * canvas.width + (x + dx)) * 4;
-                    motionFrameData.data[motionIndex] = 255;     // R
-                    motionFrameData.data[motionIndex + 1] = 0;   // G
-                    motionFrameData.data[motionIndex + 2] = 0;   // B
-                    motionFrameData.data[motionIndex + 3] = 150; // A (increased opacity)
-                  }
+                if (diff > 30) { // Motion threshold
+                  xMovement += (currentFrameData.data[index] - lastFrameData.data[index]);
+                  yMovement += (currentFrameData.data[index + 1] - lastFrameData.data[index + 1]);
+                  count++;
                 }
               }
             }
+
+            if (count > 0) {
+              let avgXMovement = xMovement / count;
+              let avgYMovement = yMovement / count;
+
+              drawArrow(context, (col + 0.5) * cellWidth, (row + 0.5) * cellHeight, avgXMovement, avgYMovement);
+            }
           }
         }
-
-        // Draw the dimmed original video
-        context.putImageData(currentFrameData, 0, 0);
-        // Overlay the motion regions
-        context.putImageData(motionFrameData, 0, 0);
       }
 
       lastFrameData = currentFrameData;
-
       if (!video.paused && !video.ended) {
         requestAnimationFrame(step);
       }
     }
     requestAnimationFrame(step);
   });
+}
+
+function drawArrow(ctx, x, y, dx, dy) {
+  const arrowLength = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
+
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + arrowLength * Math.cos(angle), y + arrowLength * Math.sin(angle));
+  ctx.strokeStyle = 'red';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Drawing the arrowhead
+  ctx.lineTo(x + arrowLength * Math.cos(angle) - 5 * Math.cos(angle - Math.PI / 6), y + arrowLength * Math.sin(angle) - 5 * Math.sin(angle - Math.PI / 6));
+  ctx.moveTo(x + arrowLength * Math.cos(angle), y + arrowLength * Math.sin(angle));
+  ctx.lineTo(x + arrowLength * Math.cos(angle) - 5 * Math.cos(angle + Math.PI / 6), y + arrowLength * Math.sin(angle) - 5 * Math.sin(angle + Math.PI / 6));
+  ctx.stroke();
 }
 
 window.onload = startCamera;
