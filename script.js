@@ -35,8 +35,10 @@ function initializeVideoStream() {
             console.log("Camera feed started.");
             video.srcObject = stream;
             video.onloadedmetadata = function (e) {
-                console.log("Camera metadata loaded, starting video...");
+                console.log("Camera metadata loaded, setting canvas size...");
                 video.play();
+                canvasOutput.width = video.videoWidth;
+                canvasOutput.height = video.videoHeight;
                 initializeOpenCVObjects();
             };
         })
@@ -44,6 +46,7 @@ function initializeVideoStream() {
             console.error("An error occurred while accessing the camera: ", err);
         });
 }
+
 
 cv['onRuntimeInitialized'] = onOpenCVReady;
 
