@@ -58,10 +58,17 @@ function processVideo() {
     try {
         console.log("Processing video frame...");
         let frame1 = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-        cap.read(frame1);
-        cv.cvtColor(frame1, prvs, cv.COLOR_RGBA2GRAY);
-        frame1.delete();
-        // More OpenCV processing...
+        let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1); // Destination image
+
+        cap.read(frame1); // Read a frame from the video
+        cv.cvtColor(frame1, dst, cv.COLOR_RGBA2GRAY); // Convert to grayscale
+
+        cv.imshow('canvasOutput', dst); // Display the processed frame on the canvas
+
+        frame1.delete(); // Clean up
+        dst.delete();
+
+        requestAnimationFrame(processVideo); // Continue processing frames
     } catch (err) {
         console.error("Error processing video frame: ", err);
     }
