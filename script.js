@@ -61,10 +61,11 @@ function processVideo() {
         let next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
         cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
 
+        // Display the grayscale frame on the canvas
+        cv.imshow('canvasOutput', next);
+
         let flow = new cv.Mat();
         cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
-
-        canvasContext.clearRect(0, 0, video.width, video.height);
 
         // Draw arrows to represent the optical flow
         for (let y = 0; y < video.height; y += 20) {
@@ -79,7 +80,7 @@ function processVideo() {
         }
 
         prvs.delete();
-        prvs = next;
+        prvs = next.clone(); // Clone the next frame to use as the previous frame in the next iteration
         frame2.delete();
         flow.delete();
         requestAnimationFrame(processVideo);
@@ -87,6 +88,7 @@ function processVideo() {
         console.error("Error processing video frame: ", err);
     }
 }
+
 
 function drawArrow(context, fromX, fromY, toX, toY) {
     var headLength = 10; // length of head in pixels
