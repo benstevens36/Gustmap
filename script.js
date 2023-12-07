@@ -2,25 +2,22 @@ console.log("Script loaded. Setting up OpenCV check...");
 
 let video, canvasOutput, canvasContext, cap, prvs, next;
 
+function initializeOpenCVObjects() {
+    try {
+        cap = new cv.VideoCapture(video);
+        prvs = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        console.log("OpenCV objects initialized");
+        requestAnimationFrame(processVideo);
+    } catch (error) {
+        console.error("Error during OpenCV objects initialization: ", error);
+    }
+}
+
 function onOpenCVReady() {
     console.log("OpenCV.js is ready.");
     initializeVideoStream();
 }
-
-function checkOpenCvReady() {
-    if (cv && cv.imread) {
-        console.log("Checking if OpenCV is ready...");
-        onOpenCVReady();
-    } else {
-        console.log("Waiting for OpenCV.js to be ready...");
-        setTimeout(checkOpenCvReady, 50);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM fully loaded and parsed.");
-    checkOpenCvReady();
-});
 
 function initializeVideoStream() {
     video = document.getElementById("cameraFeed");
@@ -41,7 +38,6 @@ function initializeVideoStream() {
                 console.log("Camera metadata loaded, starting video...");
                 video.play();
                 initializeOpenCVObjects();
-                requestAnimationFrame(processVideo);
             };
         })
         .catch(function (err) {
@@ -49,16 +45,14 @@ function initializeVideoStream() {
         });
 }
 
-function initializeOpenCVObjects() {
-    try {
-        cap = new cv.VideoCapture(video);
-        prvs = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-        next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-        console.log("OpenCV objects initialized");
-    } catch (error) {
-        console.error("Error during OpenCV objects initialization: ", error);
+cv['onRuntimeInitialized'] = onOpenCVReady;
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM fully loaded and parsed.");
+    if (!cv || !cv.imread) {
+        console.error("OpenCV is not ready or not loaded.");
     }
-}
+});
 
 function processVideo() {
     try {
