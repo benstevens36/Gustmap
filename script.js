@@ -2,18 +2,6 @@ console.log("Script loaded. Setting up OpenCV check...");
 
 let video, canvasOutput, canvasContext, cap, prvs, next;
 
-function initializeOpenCVObjects() {
-    try {
-        cap = new cv.VideoCapture(video);
-        prvs = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
-        next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
-        console.log("OpenCV objects initialized");
-        requestAnimationFrame(processVideo);
-    } catch (error) {
-        console.error("Error during OpenCV objects initialization: ", error);
-    }
-}
-
 function onOpenCVReady() {
     console.log("OpenCV.js is ready.");
     initializeVideoStream();
@@ -35,10 +23,8 @@ function initializeVideoStream() {
             console.log("Camera feed started.");
             video.srcObject = stream;
             video.onloadedmetadata = function (e) {
-                console.log("Camera metadata loaded, setting canvas size...");
+                console.log("Camera metadata loaded, starting video...");
                 video.play();
-                canvasOutput.width = video.videoWidth;
-                canvasOutput.height = video.videoHeight;
                 initializeOpenCVObjects();
             };
         })
@@ -47,14 +33,19 @@ function initializeVideoStream() {
         });
 }
 
-cv['onRuntimeInitialized'] = onOpenCVReady;
-
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM fully loaded and parsed.");
-    if (!cv || !cv.imread) {
-        console.error("OpenCV is not ready or not loaded.");
+function initializeOpenCVObjects() {
+    try {
+        cap = new cv.VideoCapture(video);
+        prvs = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
+        next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
+        canvasOutput.width = video.videoWidth;   // Set canvas dimensions
+        canvasOutput.height = video.videoHeight;
+        console.log("OpenCV objects initialized with video dimensions: ", video.videoWidth, video.videoHeight);
+        requestAnimationFrame(processVideo);
+    } catch (error) {
+        console.error("Error during OpenCV objects initialization: ", error);
     }
-});
+}
 
 function processVideo() {
     try {
@@ -98,18 +89,11 @@ function processVideo() {
 }
 
 
-function drawArrow(context, fromX, fromY, toX, toY) {
-    var headLength = 10; // length of head in pixels
-    var dx = toX - fromX;
-    var dy = toY - fromY;
-    var angle = Math.atan2(dy, dx);
-    context.strokeStyle = 'red';
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(fromX, fromY);
-    context.lineTo(toX, toY);
-    context.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
-    context.moveTo(toX, toY);
-    context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
-    context.stroke();
-}
+cv['onRuntimeInitialized'] = onOpenCVReady;
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM fully loaded and parsed.");
+    if (!cv || !cv.imread) {
+        console.error("OpenCV is not ready or not loaded.");
+    }
+});
