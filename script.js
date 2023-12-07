@@ -89,12 +89,19 @@ function processVideo() {
     }
 }
 
-
 function drawArrow(context, fromX, fromY, toX, toY) {
-    var headLength = 10; // length of head in pixels
     var dx = toX - fromX;
     var dy = toY - fromY;
     var angle = Math.atan2(dy, dx);
+    var length = Math.sqrt(dx * dx + dy * dy);
+
+    // Scale the head length based on the arrow length
+    var headLength = length * 0.15; // Adjust the 0.15 factor to scale the arrow head
+
+    // Ensure the head isn't too big or too small
+    headLength = Math.max(headLength, 5); // Minimum size
+    headLength = Math.min(headLength, 20); // Maximum size
+
     context.strokeStyle = 'red';
     context.lineWidth = 2;
     context.beginPath();
@@ -105,3 +112,4 @@ function drawArrow(context, fromX, fromY, toX, toY) {
     context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
     context.stroke();
 }
+
