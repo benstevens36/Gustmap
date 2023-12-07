@@ -5,8 +5,8 @@ let video, canvasOutput, canvasContext, cap, prvs, next;
 function initializeOpenCVObjects() {
     try {
         cap = new cv.VideoCapture(video);
-        prvs = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-        next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        prvs = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
+        next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
         console.log("OpenCV objects initialized");
         requestAnimationFrame(processVideo);
     } catch (error) {
@@ -47,7 +47,6 @@ function initializeVideoStream() {
         });
 }
 
-
 cv['onRuntimeInitialized'] = onOpenCVReady;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -59,37 +58,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function processVideo() {
     try {
-        let frame2 = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let frame2 = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
         cap.read(frame2);
-        let next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        let next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
         cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
-
-        // Display the grayscale frame on the canvas
-        cv.imshow('canvasOutput', next);
 
         let flow = new cv.Mat();
         cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 
+        canvasContext.clearRect(0, 0, canvasOutput.width, canvasOutput.height);
+
         // Draw arrows to represent the optical flow
-        for (let y = 0; y < video.height; y += 20) {
-            for (let x = 0; x < video.width; x += 20) {
-                let idx = (y * video.width + x) * 2;
+        for (let y = 0; y < video.videoHeight; y += 20) {
+            for (let x = 0; x < video.videoWidth; x += 20) {
+                let idx = (y * video.videoWidth + x) * 2;
                 let u = flow.data32F[idx];
                 let v = flow.data32F[idx + 1];
-                if (Math.abs(u) > 2 || Math.abs(v) > 2) { // Threshold to filter small movements
+                if (Math.abs(u) > 2 || Math.abs(v) > 2) {
                     drawArrow(canvasContext, x, y, x + u, y + v);
                 }
             }
         }
 
-        // Hide the loading message
-        let loadingMessage = document.getElementById("loadingMessage");
-        if (loadingMessage) {
-            loadingMessage.style.display = "none";
-        }
-
         prvs.delete();
-        prvs = next.clone(); // Clone the next frame to use as the previous frame in the next iteration
+        prvs = next.clone();
         frame2.delete();
         flow.delete();
         requestAnimationFrame(processVideo);
@@ -98,20 +90,11 @@ function processVideo() {
     }
 }
 
-
 function drawArrow(context, fromX, fromY, toX, toY) {
+    var headLength = 10; // length of head in pixels
     var dx = toX - fromX;
     var dy = toY - fromY;
     var angle = Math.atan2(dy, dx);
-    var length = Math.sqrt(dx * dx + dy * dy);
-
-    // Scale the head length based on the arrow length
-    var headLength = length * 0.15; // Adjust the 0.15 factor to scale the arrow head
-
-    // Ensure the head isn't too big or too small
-    headLength = Math.max(headLength, 5); // Minimum size
-    headLength = Math.min(headLength, 20); // Maximum size
-
     context.strokeStyle = 'red';
     context.lineWidth = 2;
     context.beginPath();
@@ -122,4 +105,3 @@ function drawArrow(context, fromX, fromY, toX, toY) {
     context.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
     context.stroke();
 }
-
