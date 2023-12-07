@@ -1,32 +1,3 @@
-let video, canvasOutput, canvasContext, cap, frame1, prvs, next;
-
-function onOpenCVReady() {
-    console.log("OpenCV.js is ready.");
-
-    video = document.getElementById("cameraFeed");
-    canvasOutput = document.getElementById("canvasOutput");
-    canvasContext = canvasOutput.getContext("2d");
-
-    cap = new cv.VideoCapture(video);
-    frame1 = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-    prvs = new cv.Mat();
-    next = new cv.Mat();
-
-    startCamera();
-}
-
-function checkOpenCVInitialization() {
-    if (cv && cv.imread) {
-        onOpenCVReady();
-    } else {
-        console.log("Waiting for OpenCV.js to be ready...");
-        setTimeout(checkOpenCVInitialization, 50);
-    }
-}
-
-cv['onRuntimeInitialized'] = checkOpenCVInitialization;
-
-// The rest of your script functions (startCamera, drawArrow, processVideo) go here
 document.addEventListener("DOMContentLoaded", function () {
     let video = document.getElementById("cameraFeed");
     let canvasOutput = document.getElementById("canvasOutput");
