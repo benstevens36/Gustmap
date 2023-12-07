@@ -58,17 +58,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function processVideo() {
     try {
+        // Update the canvas size to match the video size each frame
+        canvasOutput.width = video.videoWidth;
+        canvasOutput.height = video.videoHeight;
+
+        // Create new matrices with the updated dimensions
         let frame2 = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-        cap.read(frame2);
         let next = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC1);
+
+        // Read the current frame from the video
+        cap.read(frame2);
+
+        // Convert to grayscale
         cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
 
+        // Calculate optical flow
         let flow = new cv.Mat();
         cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 
-        canvasContext.clearRect(0, 0, canvasOutput.width, canvasOutput.height);
-
-        // Draw arrows to represent the optical flow
+        // Draw the optical flow arrows
         for (let y = 0; y < video.videoHeight; y += 20) {
             for (let x = 0; x < video.videoWidth; x += 20) {
                 let idx = (y * video.videoWidth + x) * 2;
@@ -80,15 +88,19 @@ function processVideo() {
             }
         }
 
+        // Update previous frame and clean up
         prvs.delete();
         prvs = next.clone();
         frame2.delete();
         flow.delete();
+
+        // Request next frame processing
         requestAnimationFrame(processVideo);
     } catch (err) {
         console.error("Error processing video frame: ", err);
     }
 }
+
 
 function drawArrow(context, fromX, fromY, toX, toY) {
     var headLength = 10; // length of head in pixels
