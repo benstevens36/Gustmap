@@ -61,11 +61,6 @@ function processVideo() {
     try {
         console.log("Starting processVideo function...");
 
-        if (!cap.isOpened()) {
-            console.error("Video capture is not opened.");
-            return;
-        }
-
         let frame2 = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         cap.read(frame2);
 
@@ -112,6 +107,7 @@ function hideLoadingMessage() {
         loadingMessage.style.display = "none";
     }
 }
+
 
 function drawArrow(context, fromX, fromY, toX, toY) {
     var dx = toX - fromX;
