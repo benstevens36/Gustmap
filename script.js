@@ -59,37 +59,44 @@ function initializeOpenCVObjects() {
 
 function processVideo() {
     try {
+        console.log("Starting processVideo function...");
+
+        if (!cap.isOpened()) {
+            console.error("Video capture is not opened.");
+            return;
+        }
+
         let frame2 = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         cap.read(frame2);
+
+        if (frame2.empty()) {
+            console.error("No frames grabbed.");
+            frame2.delete();
+            return;
+        }
+
         let next = new cv.Mat(video.height, video.width, cv.CV_8UC1);
         cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
-
-        // Display the grayscale frame on the canvas
         cv.imshow('canvasOutput', next);
 
         let flow = new cv.Mat();
+        console.log("Calculating optical flow...");
         cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 
-        // Draw arrows to represent the optical flow
         for (let y = 0; y < video.height; y += 20) {
             for (let x = 0; x < video.width; x += 20) {
                 let idx = (y * video.width + x) * 2;
                 let u = flow.data32F[idx];
                 let v = flow.data32F[idx + 1];
-                if (Math.abs(u) > 2 || Math.abs(v) > 2) { // Threshold to filter small movements
+                if (Math.abs(u) > 2 || Math.abs(v) > 2) {
                     drawArrow(canvasContext, x, y, x + u, y + v);
                 }
             }
         }
 
-        // Hide the loading message
-        let loadingMessage = document.getElementById("loadingMessage");
-        if (loadingMessage) {
-            loadingMessage.style.display = "none";
-        }
-
+        hideLoadingMessage();
         prvs.delete();
-        prvs = next.clone(); // Clone the next frame to use as the previous frame in the next iteration
+        prvs = next.clone();
         frame2.delete();
         flow.delete();
         requestAnimationFrame(processVideo);
@@ -97,6 +104,15 @@ function processVideo() {
         console.error("Error processing video frame: ", err);
     }
 }
+
+function hideLoadingMessage() {
+    let loadingMessage = document.getElementById("loadingMessage");
+    if (loadingMessage && loadingMessage.style.display !== "none") {
+        console.log("Hiding loading message.");
+        loadingMessage.style.display = "none";
+    }
+}
+
 function drawArrow(context, fromX, fromY, toX, toY) {
     var dx = toX - fromX;
     var dy = toY - fromY;
