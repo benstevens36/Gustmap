@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>OpenCV JavaScript Live Camera Example</title>
-    <!-- Load local OpenCV.js -->
-    <script src="opencv.js" type="text/javascript"></script>
-    <!-- Include the JavaScript file -->
-    <script src="script.js" type="text/javascript"></script>
+    <title>Camera Application</title>
+    <style>
+      #cameraFeed,
+      #processedFeed {
+        width: 100%;
+        height: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
   <body>
-    <!-- Placeholder for loading message -->
-    <div id="loadingMessage">Camera feed loading...</div>
+    <video id="cameraFeed" autoplay muted playsinline></video>
+    <canvas id="processedFeed"></canvas>
+    <!-- Added canvas element -->
 
-    <!-- Hidden Video Element for Capturing Video Feed -->
-    <video id="cameraFeed" autoplay muted playsinline style="display: none;" width="640" height="480"></video>
-
-    <!-- Canvas for displaying the processed feed -->
-    <canvas id="canvasOutput" width="640" height="480"></canvas>
+    <script src="app.js"></script>
+    <!-- Link to your JavaScript file -->
   </body>
 </html>
